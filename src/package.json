@@ -1,0 +1,16 @@
+{
+  "name": "alexa-zipcode-lookup",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "postal-abbreviations": "^2.0.0",
+    "number-to-words": "^1.2.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Chris Pauly",
+  "license": "ISC"
+}

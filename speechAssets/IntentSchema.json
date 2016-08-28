@@ -1,0 +1,48 @@
+{
+  "intents": [
+    {
+      "intent": "GetZipCodeIntent",
+      "slots": [
+        {
+          "name": "zipA",
+          "type": "AMAZON.NUMBER"
+        },
+        {
+          "name": "zipB",
+          "type": "AMAZON.NUMBER"
+        },
+        {
+          "name": "zipC",
+          "type": "AMAZON.NUMBER"
+        },
+        {
+          "name": "zipD",
+          "type": "AMAZON.NUMBER"
+        },
+        {
+          "name": "zipE",
+          "type": "AMAZON.NUMBER"
+        }   
+      ]
+    },
+    {
+      "intent": "GetCityIntent",
+      "slots": [
+        {
+          "name": "usCity",
+          "type": "AMAZON.US_CITY"
+        },
+        {
+          "name": "usState",
+          "type": "AMAZON.US_STATE"
+        }  
+      ]
+    },
+    {
+      "intent": "AMAZON.StopIntent"
+    },
+    {
+      "intent": "AMAZON.CancelIntent"
+    }
+  ]
+}
