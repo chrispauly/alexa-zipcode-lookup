@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "postal-abbreviations": "^2.0.0",
-    "number-to-words": "^1.2.3"
+    "dotenv": "^2.0.0",
+    "number-to-words": "^1.2.3",
+    "postal-abbreviations": "^2.0.0"
   },
   "devDependencies": {},
   "scripts": {

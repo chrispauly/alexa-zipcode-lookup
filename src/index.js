@@ -1,9 +1,11 @@
+require('dotenv').config({silent: true});
 var AlexaSkill = require('./AlexaSkill');
 var converter = require('number-to-words');
 var postal = require('postal-abbreviations');
+var googleAPIKEY = process.env.G_APIKEY;
 
 var ZipCode = function () {
-    AlexaSkill.call(this);
+    AlexaSkill.call(this, process.env.ASK_APPID);
 };
 
 // Extend AlexaSkill
@@ -84,13 +86,17 @@ function cityLookup(zip, response) {
                                 speech: "<speak>I did not find a location for the zipcode <say-as interpret-as=\"digits\">" + zip + "</say-as>.</speak>",
                                 type: AlexaSkill.speechOutputType.SSML
                                 }
+            var cardContent = "I did not find a location for the zipcode " + zip;
+            var imageUrl = { cardSmallImage: undefined, cardLargeImage: undefined };
             if(httpGet.statusCode === 200) {
                 var oZip = JSON.parse(str);
-                if(oZip.places)
+                if(oZip.places) {
                     helloMessage = "That zipcode is for " + oZip.places[0]["place name"] + ", " + oZip.places[0]["state"];
+                    cardContent = helloMessage;
+                    imageUrl = buildImageUrl(zip);
+                }
             }
-
-            response.tell(helloMessage);
+            response.tellWithCard(helloMessage, zip, cardContent, imageUrl.cardSmallImage, imageUrl.cardLargeImage);
         });
 
         httpGet.on('error', function (err) {
@@ -101,11 +107,12 @@ function cityLookup(zip, response) {
     http.request(options, callback).end();
 }
 
-function zipLookup(city, stateName, stateAbbrev, response) {
+function zipLookup(city, stateName, stateAbbrev, response, finalTry) {
+    var cantFindMessage =  "I couldn't find a zipcode for " + city + ", " + stateName;
     var http = require('http');
     var options = {
         host: 'api.zippopotam.us',
-        path: '/us/' + stateAbbrev + '/' + city.replace(" ", "%20")
+        path: '/us/' + stateAbbrev + '/' + city.replace(/ /g, "%20")
     };
 
     callback = function(httpGet) {
@@ -116,7 +123,7 @@ function zipLookup(city, stateName, stateAbbrev, response) {
         });
 
         httpGet.on('end', function () {
-            var helloMessage = "I couldn't find a zipcode for " + city + ", " + stateName;
+            var helloMessage = undefined;
             if(httpGet.statusCode === 200) {
                 var oZip = JSON.parse(str);
                 if(oZip.places) {                    
@@ -124,7 +131,41 @@ function zipLookup(city, stateName, stateAbbrev, response) {
                 }
             }
 
-            response.tell(helloMessage);
+            if(finalTry) {
+                response.tellWithCard(cantFindMessage,  city + ", " + stateAbbrev.toUpperCase(), cantFindMessage);
+            }
+
+            if(!helloMessage) {
+                // See if Google can help predict the correct spelling of the city name
+                var https = require('https');
+                var cityLookup = city.replace(/ /g, "%20") + ',' + stateAbbrev;            
+                var goptions = {
+                    host: 'maps.googleapis.com',
+                    path: '/maps/api/place/autocomplete/json?input=' + cityLookup + '&types=(cities)&key=' + googleAPIKEY
+                };
+
+                var gcallback = function(httpsGet) {
+                    var str = '';
+
+                    httpsGet.on('data', function (chunk) {
+                        str += chunk;
+                    });
+
+                    httpsGet.on('end', function () {
+                        if(httpsGet.statusCode === 200 && str) {
+                            var gresponse = JSON.parse(str);
+                            console.log("autocomplete (" + city + "): ", str);
+                            zipLookup(gresponse["predictions"][0]["description"].split(",")[0], stateName, stateAbbrev, response, true);
+                        } else {
+                            response.tellWithCard(cantFindMessage,  city + ", " + stateAbbrev.toUpperCase(), cantFindMessage);
+                        }
+                    });
+                }
+                https.request(goptions, gcallback).end();
+            } else {
+                var imageUrl = buildImageUrl(city.replace(/ /g, "%20") + "," + stateAbbrev);
+                response.tellWithCard(helloMessage, city + ", " + stateAbbrev.toUpperCase(), helloMessage.cardContent, imageUrl.cardSmallImage, imageUrl.cardLargeImage);
+            }
         });
 
         httpGet.on('error', function (err) {
@@ -138,21 +179,26 @@ function zipLookup(city, stateName, stateAbbrev, response) {
 function buildCityMessage(places, city) {
     console.log(JSON.stringify(places));
     var hello = '';
+    var cardContent = undefined;
     if(places.length === 1) {
-         hello = "The zipcode for " + city + " is <say-as interpret-as=\"digits\">" + places[0]["post code"] + "</say-as>";
+        hello = "The zipcode for " + city + " is <say-as interpret-as=\"digits\">" + places[0]["post code"] + "</say-as>";
+        cardContent = hello;
     } else if(places.length > 5) {
         // tell the first and last zipcodes... and the count
         hello = "There are " + places.length + " zipcodes for " + city + ", between ";
         hello += "<say-as interpret-as=\"digits\">" + places[0]["post code"] + " and " + places[places.length-1]["post code"] + ".</say-as>";
+        cardContent = "Zipcodes: " + buildZipCodeListMessage(getZips(places));
     } else {
         // assemble the small list together
         hello = "I found " + places.length + " zipcodes for " + city + ".";
         hello += "  <say-as interpret-as=\"digits\">" + buildZipCodeListMessage(getZips(places)) + "</say-as>";
+        cardContent = "Zipcodes: " + buildZipCodeListMessage(getZips(places));
     }
 
     return {
                 speech: "<speak>" + hello + "</speak>",
-                type: AlexaSkill.speechOutputType.SSML
+                type: AlexaSkill.speechOutputType.SSML,
+                cardContent: cardContent
             };
 }
 
@@ -175,6 +221,13 @@ function buildZipCodeListMessage(zips) {
             message += zips[i] + ", ";
     }
     return message;
+}
+
+function buildImageUrl(center) {
+    return {
+        cardSmallImage: "https://maps.googleapis.com/maps/api/staticmap?center=" + center + "&zoom=13&size=720x480&maptype=roadmap&key=" + googleAPIKEY,
+        cardLargeImage: "https://maps.googleapis.com/maps/api/staticmap?center=" + center + "&zoom=12&size=1200x800&maptype=roadmap&key=" + googleAPIKEY
+    };
 }
 
 exports.handler = function (event, context) {

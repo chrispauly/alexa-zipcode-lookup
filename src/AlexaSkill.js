@@ -141,9 +141,13 @@ Response.prototype = (function () {
         }
         if (options.cardTitle && options.cardContent) {
             alexaResponse.card = {
-                type: "Simple",
+                type: "Standard",
                 title: options.cardTitle,
-                content: options.cardContent
+                text: options.cardContent,
+                image: {
+                     smallImageUrl: options.cardSmallImage,
+                     largeImageUrl: options.cardLargeImage || options.cardSmallImage
+                  }
             };
         }
         var returnResult = {
@@ -164,12 +168,14 @@ Response.prototype = (function () {
                 shouldEndSession: true
             }));
         },
-        tellWithCard: function (speechOutput, cardTitle, cardContent) {
+        tellWithCard: function (speechOutput, cardTitle, cardContent, cardSmallImage, cardLargeImage) {
             this._context.succeed(buildSpeechletResponse({
                 session: this._session,
                 output: speechOutput,
                 cardTitle: cardTitle,
                 cardContent: cardContent,
+                cardSmallImage: cardSmallImage,
+                cardLargeImage: cardLargeImage,
                 shouldEndSession: true
             }));
         },
@@ -181,13 +187,15 @@ Response.prototype = (function () {
                 shouldEndSession: false
             }));
         },
-        askWithCard: function (speechOutput, repromptSpeech, cardTitle, cardContent) {
+        askWithCard: function (speechOutput, repromptSpeech, cardTitle, cardContent, cardSmallImage, cardLargeImage) {
             this._context.succeed(buildSpeechletResponse({
                 session: this._session,
                 output: speechOutput,
                 reprompt: repromptSpeech,
                 cardTitle: cardTitle,
                 cardContent: cardContent,
+                cardSmallImage: cardSmallImage,
+                cardLargeImage: cardLargeImage,                
                 shouldEndSession: false
             }));
         }
