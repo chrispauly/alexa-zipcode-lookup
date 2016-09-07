@@ -1,2 +1,19 @@
 GetZipCodeIntent {zipA} {zipB} {zipC} {zipD} {zipE}
+GetZipCodeIntent what city has the zipcode {zipA} {zipB} {zipC} {zipD} {zipE}
+GetZipCodeIntent tell me the city with the zipcode {zipA} {zipB} {zipC} {zipD} {zipE}
+GetZipCodeIntent lookup {zipA} {zipB} {zipC} {zipD} {zipE}
+GetZipCodeIntent find {zipA} {zipB} {zipC} {zipD} {zipE}
+GetZipCodeIntent where is {zipA} {zipB} {zipC} {zipD} {zipE}
+GetZipCodeIntent what city is {zipA} {zipB} {zipC} {zipD} {zipE}
+GetZipCodeIntent for the city with zipcode {zipA} {zipB} {zipC} {zipD} {zipE}
 GetCityIntent {usCity} {usState}
+GetCityIntent lookup {usCity} {usState}
+GetCityIntent what is the zipcode for {usCity} {usState}
+GetCityIntent lookup the zipcode for {usCity} {usState}
+GetCityIntent tell me the zipcode for {usCity} {usState}
+GetCityIntent for the zipcodes in {usCity} {usState}
+GetCityIntent for the zipcodes of {usCity} {usState}
+GetCityIntent for the zipcodes for {usCity} {usState}
+GetCityIntent of the zipcodes in {usCity} {usState}
+GetCityIntent of the zipcodes of {usCity} {usState}
+GetCityIntent of the zipcodes for {usCity} {usState}

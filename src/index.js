@@ -4,6 +4,10 @@ var converter = require('number-to-words');
 var postal = require('postal-abbreviations');
 var googleAPIKEY = process.env.G_APIKEY;
 
+String.prototype.toProperCase = function () {
+    return this.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+};
+
 var ZipCode = function () {
     AlexaSkill.call(this, process.env.ASK_APPID);
 };
@@ -108,6 +112,7 @@ function cityLookup(zip, response) {
 }
 
 function zipLookup(city, stateName, stateAbbrev, response, finalTry) {
+    city = city.toProperCase();
     var cantFindMessage =  "I couldn't find a zipcode for " + city + ", " + stateName;
     var http = require('http');
     var options = {
@@ -180,9 +185,13 @@ function buildCityMessage(places, city) {
     console.log(JSON.stringify(places));
     var hello = '';
     var cardContent = undefined;
+    
     if(places.length === 1) {
-        hello = "The zipcode for " + city + " is <say-as interpret-as=\"digits\">" + places[0]["post code"] + "</say-as>";
-        cardContent = hello;
+        hello = "The zipcode for " + city + " is <say-as interpret-as=\"digits\">" + places[0]["post code"] + ".</say-as>";
+        cardContent = cleanCardMessage(hello);
+    } else if(places.length === 2) {
+        hello = "The zipcodes for " + city + " are <say-as interpret-as=\"digits\">" + places[0]["post code"] + " and " + places[1]["post code"] + ".</say-as>";
+        cardContent = cleanCardMessage(hello);
     } else if(places.length > 5) {
         // tell the first and last zipcodes... and the count
         hello = "There are " + places.length + " zipcodes for " + city + ", between ";
@@ -200,6 +209,10 @@ function buildCityMessage(places, city) {
                 type: AlexaSkill.speechOutputType.SSML,
                 cardContent: cardContent
             };
+}
+
+function cleanCardMessage(message) {
+    return message.replace(/<.*?>/g,"");
 }
 
 function getZips(places, start, count) {
