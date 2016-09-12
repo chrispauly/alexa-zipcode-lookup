@@ -4,6 +4,10 @@ var converter = require('number-to-words');
 var postal = require('postal-abbreviations');
 var googleAPIKEY = process.env.G_APIKEY;
 
+var newSessionMsg = "Tell me a zipcode, or a city and state.";
+var helpMsg = "You can tell me a five digit zipcode and I will tell you what city that is for.  Or you "
+            + "can tell me a city and state and I will tell you the zipcode or zipcodes associated with that city.";
+
 String.prototype.toProperCase = function () {
     return this.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
 };
@@ -17,7 +21,7 @@ ZipCode.prototype = Object.create(AlexaSkill.prototype);
 ZipCode.prototype.constructor = ZipCode;
 
 ZipCode.prototype.eventHandlers.onLaunch = function (launchRequest, session, response) {
-    response.ask("Tell me a zipcode, or a city and state.");
+    response.ask(newSessionMsg);
 };
 
 ZipCode.prototype.intentHandlers = {
@@ -52,6 +56,10 @@ ZipCode.prototype.intentHandlers = {
 
         zipLookup(city, stateName, stateAbbrev, response);
     },
+
+    "AMAZON.HelpIntent": function (intent, session, response) {
+        response.ask(helpMsg);
+    },    
 
     "AMAZON.StopIntent": function (intent, session, response) {
         response.tell("");
